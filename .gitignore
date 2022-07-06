@@ -1,5 +1,6 @@
-.vs/*
-.vs
+.vs/
 Debug
 Debug/*
-*.sln
+*.db
+*.opendb
+.vs/BTL_20194367/v14/.suo
