@@ -1,0 +1,9 @@
+﻿  Client.cpp
+c:\users\tan\documents\visual studio 2015\projects\btl_20194367\client\client.cpp(69): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(1769): note: see declaration of 'sprintf'
+c:\users\tan\documents\visual studio 2015\projects\btl_20194367\client\client.cpp(77): warning C4474: 'printf' : too many arguments passed for format string
+  c:\users\tan\documents\visual studio 2015\projects\btl_20194367\client\client.cpp(77): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+c:\users\tan\documents\visual studio 2015\projects\btl_20194367\client\client.cpp(85): warning C4474: 'printf' : too many arguments passed for format string
+  c:\users\tan\documents\visual studio 2015\projects\btl_20194367\client\client.cpp(85): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+  Client.vcxproj -> C:\Users\tan\documents\visual studio 2015\Projects\BTL_20194367\Debug\Client.exe
+  Client.vcxproj -> C:\Users\tan\documents\visual studio 2015\Projects\BTL_20194367\Debug\Client.pdb (Full PDB)
