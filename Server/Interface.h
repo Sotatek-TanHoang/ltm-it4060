@@ -24,6 +24,7 @@ struct Participant{
 	bool isActive=false;
 	bool isMainPlayer=false;
 	int8_t skipCount=MAX_SKIP;
+	int currentAnswer=0;
 };
 struct RoomInfor {
 	string roomName;
@@ -43,4 +44,3 @@ struct RoundInfor{
 	int roundNumber;
 	
 };
-
