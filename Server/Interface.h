@@ -24,7 +24,7 @@ struct Participant{
 	bool isActive=false;
 	bool isMainPlayer=false;
 	int8_t skipCount=MAX_SKIP;
-}
+};
 struct RoomInfor {
 	string roomName;
 	int currentPaticipants=0;
@@ -32,15 +32,15 @@ struct RoomInfor {
 	int maxRound=MAX_ROUND_PER_ROOM;
 	int currentRoundCount=0;
 
-}
+};
 struct QuizzInfor{
 	string question;
-	string[] options;
+	string options[100];
 	int answer;
-}
+};
 struct RoundInfor{
     QuizzInfor quizz;
 	int roundNumber;
 	
-}
+};
 
