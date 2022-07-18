@@ -1,7 +1,23 @@
 #include "Util.h"
 #include "Header.h"
-#include "Interface.h"
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <iostream>
 
+#define MAX_QUESTION 100
+
+using namespace std;
+
+class QuizzInfor {
+public:
+	string question;
+	string options[100];
+	int answer;
+	QuizzInfor() {};
+};
+
+QuizzInfor listQuestion[MAX_QUESTION];
 
 unsigned __stdcall thread(void *param) {
 	ThreadInformation *data= (ThreadInformation *)param;
@@ -51,6 +67,48 @@ unsigned __stdcall thread(void *param) {
 
 	closesocket(connectedSocket);
 	return 0;
+}
+
+int count1 = 0;
+
+void printListQuestion() {
+	for (int i = 0;i < count1;i++) {
+		cout << listQuestion[i].question << " " << listQuestion[i].answer << " " << listQuestion[i].options << endl;
+	}
+}
+
+/* The readQuestion function is to read question from file
+* @param no param
+* @return no return value
+*/
+void readQuestion() {
+	ifstream inputFile("question.txt");
+	string line;
+	if (inputFile)
+	{
+		while (getline(inputFile, line))
+		{
+			QuizzInfor q;
+			istringstream ss(line);
+
+			ss >> q.question;
+
+			ss >> q.answer;
+			ss >> q.options[0];
+			ss >> q.options[1];
+			ss >> q.options[2];
+			ss >> q.options[3];
+
+			if (ss)
+			{
+				listQuestion[count1++] = q;
+			}
+		}
+	}
+	else
+	{
+		cout << "File cannot be opened" << std::endl;
+	}
 }
 
 int main(int argc, char* argv[])
