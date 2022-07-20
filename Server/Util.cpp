@@ -1,4 +1,6 @@
+#include "Methods.h"
 #include "Util.h"
+using namespace std;
 
 string takeMesage(char * buff) {
 	string src(buff);
@@ -17,10 +19,10 @@ bool processData(char * buff, char * queue) {
 
 	// TODO: handle message here
 
-
+	string response = handleRequest(message, {});
 
 	// end.
-	strcpy(buff, &message[0]);
+	strcpy(buff, &response[0]);
 	
 	
 	return true;

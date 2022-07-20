@@ -1,5 +1,7 @@
-#include "Util.h"
 #include "Header.h"
+#include "Util.h"
+#include "Methods.h"
+#include "Interface.h"
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -9,13 +11,7 @@
 
 using namespace std;
 
-class QuizzInfor {
-public:
-	string question;
-	string options[100];
-	int answer;
-	QuizzInfor() {};
-};
+
 
 QuizzInfor listQuestion[MAX_QUESTION];
 
