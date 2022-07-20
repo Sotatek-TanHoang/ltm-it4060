@@ -15,11 +15,11 @@ struct ThreadInformation {
 struct User
 {
 	int8_t role=USER_GUESS; // enum USER_XXX;
-	string username="";
+	std::string username="";
 };
 
 struct Participant{
-	string username="";
+	std::string username="";
 	float totalPoint=PARTICIPANT_INIT_POINT;
 	bool isActive=false;
 	bool isMainPlayer=false;
@@ -27,7 +27,7 @@ struct Participant{
 	int currentAnswer=0;
 };
 struct RoomInfor {
-	string roomName;
+	std::string roomName;
 	int currentPaticipants=0;
 	int maxPaticipants=MAX_USER_PER_ROOM;
 	int maxRound=MAX_ROUND_PER_ROOM;
@@ -35,8 +35,8 @@ struct RoomInfor {
 
 };
 struct QuizzInfor{
-	string question;
-	string options[100];
+	std::string question;
+	std::string options[100];
 	int answer;
 };
 struct RoundInfor{
