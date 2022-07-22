@@ -33,7 +33,7 @@
     <ClInclude Include="Interface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Methods.h">
+    <ClInclude Include="Global.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -45,9 +45,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Util.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Methods.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

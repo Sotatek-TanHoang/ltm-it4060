@@ -17,6 +17,13 @@ struct User
 	int8_t role=USER_GUESS; // enum USER_XXX;
 	std::string username="";
 };
+struct Request {
+	User user;
+	std::string ip;
+	int port;
+	int threadId;
+	bool isLoggedIn = false;
+};
 
 struct Participant{
 	std::string username="";
@@ -44,3 +51,4 @@ struct RoundInfor{
 	int roundNumber;
 	
 };
+

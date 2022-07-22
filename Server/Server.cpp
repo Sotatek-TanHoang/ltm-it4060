@@ -1,19 +1,15 @@
 #include "Header.h"
-#include "Util.h"
-#include "Methods.h"
 #include "Interface.h"
-#include <string>
-#include <fstream>
-#include <sstream>
-#include <iostream>
+#include "Util.h"
+#include "Global.h"
 
-#define MAX_QUESTION 100
+map<string, int> USERS_STATUS;
+CRITICAL_SECTION USER_LOCK;
+CRITICAL_SECTION ROUND_LOCK;
+CRITICAL_SECTION ROOM_LOCK;
+QuizzInfor listQuestion[100];
+vector<RoomInfor> rooms;
 
-using namespace std;
-
-
-
-QuizzInfor listQuestion[MAX_QUESTION];
 
 unsigned __stdcall thread(void *param) {
 	ThreadInformation *data= (ThreadInformation *)param;
@@ -21,13 +17,21 @@ unsigned __stdcall thread(void *param) {
 	SOCKET connectedSocket = data->s;
 	char * clientIP = data->clientIP;
 	int clientPort = data->clientPort;
-	
+		
 	char buff[BUFF_SIZE];
 	char messageQueue[BUFF_SIZE *2];
 	messageQueue[0] = 0;
 	buff[0] = 0;
 	int ret;
 	bool isStop = false;
+
+	Request thisReq = {};
+	thisReq.ip = string(clientIP);
+	thisReq.port = clientPort;
+	thisReq.threadId = 1;
+	thisReq.isLoggedIn = false;
+	thisReq.user = {};
+
 	while (!isStop) {
 		ret = recv(connectedSocket, buff, BUFF_SIZE, 0);
 		
@@ -49,18 +53,31 @@ unsigned __stdcall thread(void *param) {
 		
 			appendQueue(buff, messageQueue);
 		
-			while (processData(buff, messageQueue)) {
+			while (processData(buff, messageQueue,&thisReq)) {
 				
 				ret = send(connectedSocket, buff, strlen(buff), 0);
 				if (ret == SOCKET_ERROR) {
-					printf("Error %d: Cannot send data.\n", WSAGetLastError());
+					printf("Error %d:client exited.\n", WSAGetLastError());
 					isStop = true;
 					break;
 				}
 			}
 		}
 	}
-
+	// logout user if exit unexpectedly.
+	try
+	{
+		cout << thisReq.isLoggedIn << endl;
+		if (thisReq.isLoggedIn) {
+			EnterCriticalSection(&USER_LOCK);
+			USERS_STATUS[thisReq.user.username] = 0;
+			LeaveCriticalSection(&USER_LOCK);
+		}
+	}
+	catch (const std::exception&)
+	{
+		cout << "log out error" << endl;
+	}
 	closesocket(connectedSocket);
 	return 0;
 }
@@ -109,6 +126,10 @@ void readQuestion() {
 
 int main(int argc, char* argv[])
 {
+	//init critical section.
+	InitializeCriticalSection(&USER_LOCK);
+	InitializeCriticalSection(&ROOM_LOCK);
+	InitializeCriticalSection(&ROUND_LOCK);
 	//Step 1: Initiate WinSock
 	WSADATA wsaData;
 	WORD wVersion = MAKEWORD(2, 2);
