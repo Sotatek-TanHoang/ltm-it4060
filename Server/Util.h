@@ -6,16 +6,18 @@
 
 
 
-string handleRequest(string message, Request * req);
+string handleRequest(string message, Request* req);
 // handlers for each method.
 // tan
-string handleLogin(string username, Request * req);
-string handleLogout(Request * req);
+string handleLogin(string username, Request* req);
+string handleLogout(Request* req);
 //duc
-
-
+string adminCreateRoom(string payload, Request* req);
+string adminStartRoom(string roomName, Request* req);
+string adminEndGame(string roomName, Request* req);
+string adminDeleteRoom(string roomName, Request* req);
 //phu
 
-bool processData(char * buff,char *queue,Request * req);
+bool processData(char* buff, char* queue, Request* req);
 
-void appendQueue(char * buff, char * queue);
+void appendQueue(char* buff, char* queue);
