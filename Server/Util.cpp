@@ -1,6 +1,7 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include "Util.h"
 
-string handleRequest(string message, Request * req) {
+string handleRequest(string message, Request* req) {
 	try
 	{
 		const string method = message.substr(0, METHOD_LEN);
@@ -23,19 +24,20 @@ string handleRequest(string message, Request * req) {
 			return handleLogout(req);
 		}
 		// admin create a room
+		// E.g name-maxRound-maxParticipan
 		else if (method.compare(ADMIN_CREATE_ROOM) == 0) {
-			return "logout ok";
+			return adminCreateRoom(payload, req);
 		}
 		// admin start a room
 		else if (method.compare(ADMIN_START_ROOM) == 0) {
-			return "logout ok";
+			return adminStartRoom(payload, req);
 		}
 		// admin end a game
 		else if (method.compare(ADMIN_END_GAME) == 0) {
-			return "end game ok";
+			return adminEndGame(payload, req);
 		}
 		else if (method.compare(ADMIN_DELETE_ROOM) == 0) {
-			return "delete room ok";
+			return adminDeleteRoom(payload, req);
 		}
 		else if (method.compare(PLAYER_GET_ROOMS) == 0) {
 			return "get rooms ok";
@@ -62,7 +64,7 @@ string handleRequest(string message, Request * req) {
 
 }
 // tan
-string handleLogin(string username, Request * req) {
+string handleLogin(string username, Request* req) {
 	cout << req->user.username << '.' << endl;
 	if (req->isLoggedIn == true) return "logged in";
 	EnterCriticalSection(&USER_LOCK);
@@ -78,10 +80,10 @@ string handleLogin(string username, Request * req) {
 	LeaveCriticalSection(&USER_LOCK);
 	return "username duplicated";
 }
-string handleLogout(Request * req) {
+string handleLogout(Request* req) {
 
 	if (req->isLoggedIn == false) return "not logged in ";
-	
+
 	EnterCriticalSection(&USER_LOCK);
 	if (USERS_STATUS[req->user.username] == 1) {
 
@@ -89,7 +91,7 @@ string handleLogout(Request * req) {
 		req->isLoggedIn = false;
 		LeaveCriticalSection(&USER_LOCK);
 		req->user = {};
-		
+
 		return "logged out";
 	}
 	LeaveCriticalSection(&USER_LOCK);
@@ -98,24 +100,137 @@ string handleLogout(Request * req) {
 }
 // duc
 
+vector<string> split(string s, string delimiter) {
+	size_t pos_start = 0, pos_end, delim_len = delimiter.length();
+	string token;
+	vector<string> res;
+
+	while ((pos_end = s.find(delimiter, pos_start)) != string::npos) {
+		token = s.substr(pos_start, pos_end - pos_start);
+		pos_start = pos_end + delim_len;
+		res.push_back(token);
+	}
+
+	res.push_back(s.substr(pos_start));
+	return res;
+}
+
+int findIndex(string name) {
+	auto it = std::find_if(rooms.begin(), rooms.end(),
+		[name](const RoomInfor& a)
+		{
+			return a.roomName == name;
+		});
+	if (it == rooms.end())
+		return -1; // or throw, depending on requirements
+	else
+		return it - rooms.begin();
+}
+
+int count1 = 0;
+
+void printListQuestion() {
+	for (int i = 0;i < count1;i++) {
+		cout << listQuestion[i].question << " " << listQuestion[i].answer << " " << listQuestion[i].options << endl;
+	}
+}
+
+/* The readQuestion function is to read question from file
+* @param no param
+* @return no return value
+*/
+void readQuestion() {
+	ifstream inputFile("question.txt");
+	string line;
+	if (inputFile)
+	{
+		while (getline(inputFile, line))
+		{
+			QuizzInfor q;
+			istringstream ss(line);
+
+			ss >> q.question;
+
+			ss >> q.answer;
+			ss >> q.options[0];
+			ss >> q.options[1];
+			ss >> q.options[2];
+			ss >> q.options[3];
+
+			if (ss)
+			{
+				listQuestion[count1++] = q;
+			}
+		}
+	}
+	else
+	{
+		cout << "File cannot be opened" << std::endl;
+	}
+}
+
+
+string adminCreateRoom(string payload, Request* req) {
+	if (req->isLoggedIn == false) return "not logged in ";
+	//if (req->user.role != USER_ADMIN) return "unauthorization";
+	vector<string> v = split(payload, "-");
+	if (findIndex(v[0]) >= 0) return "room exists";
+	RoomInfor newRoom;
+	newRoom.roomName = v[0];
+	newRoom.maxRound = stoi(v[1]);
+	newRoom.maxPaticipants = stoi(v[2]);
+	rooms.push_back(newRoom);
+	return "create room ok";
+}
+
+string adminStartRoom(string roomName, Request* req) {
+	if (req->isLoggedIn == false) return "not logged in ";
+	//if (req->user.role != USER_ADMIN) return "unauthorization";
+	int index = findIndex(roomName);
+	if (index ==-1) return "room does not exist";
+	rooms[index].status = ROOM_ACTIVE;
+	readQuestion();
+	return "start room ok";
+}
+
+string adminEndGame(string roomName, Request* req) {
+	if (req->isLoggedIn == false) return "not logged in ";
+	//if (req->user.role != USER_ADMIN) return "unauthorization";
+	int index = findIndex(roomName);
+	if (index == -1) return "room does not exist";
+	rooms[index].status = ROOM_DEACTIVE;
+	rooms[index].currentRoundCount = 0;
+	rooms[index].currentPaticipants = 0;
+	return "end game ok";
+}
+
+string adminDeleteRoom(string roomName, Request* req) {
+	if (req->isLoggedIn == false) return "not logged in ";
+	//if (req->user.role != USER_ADMIN) return "unauthorization";
+	int index = findIndex(roomName);
+	if (index == -1) return "room does not exist";
+	if (rooms[index].status == ROOM_ACTIVE) return "room is active";
+	rooms.erase(rooms.begin() + index);
+	return "delete ok";
+}
 
 // phu
 
 // stable.
-string takeMesage(char * buff) {
+string takeMesage(char* buff) {
 	string src(buff);
 	int index = src.find(DEMILITER);
 	if (index < 0) return "";
 	string result = src.substr(0, index);
 	// 2 is demiliter lenth.
 	string end = src.substr(index + 2);
-	strcpy(buff,&end[0]);
+	strcpy(buff, &end[0]);
 	return result;
 }
-bool processData(char * buff, char * queue,Request * req) {
+bool processData(char* buff, char* queue, Request* req) {
 
 	string message = takeMesage(queue);
-	if (message.compare("")==0) return false;
+	if (message.compare("") == 0) return false;
 
 	// TODO: handle message here
 
@@ -123,13 +238,13 @@ bool processData(char * buff, char * queue,Request * req) {
 
 	// end.
 	strcpy(buff, &response[0]);
-	
-	
+
+
 	return true;
 }
-void appendQueue(char * buff,char * queue) {
+void appendQueue(char* buff, char* queue) {
 	string temp = queue;
 	temp += buff;
 	strcpy(queue, &temp[0]);
-	
+
 }

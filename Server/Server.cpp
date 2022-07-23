@@ -11,15 +11,15 @@ QuizzInfor listQuestion[100];
 vector<RoomInfor> rooms;
 
 
-unsigned __stdcall thread(void *param) {
-	ThreadInformation *data= (ThreadInformation *)param;
+unsigned __stdcall thread(void* param) {
+	ThreadInformation* data = (ThreadInformation*)param;
 
 	SOCKET connectedSocket = data->s;
-	char * clientIP = data->clientIP;
+	char* clientIP = data->clientIP;
 	int clientPort = data->clientPort;
-		
+
 	char buff[BUFF_SIZE];
-	char messageQueue[BUFF_SIZE *2];
+	char messageQueue[BUFF_SIZE * 2];
 	messageQueue[0] = 0;
 	buff[0] = 0;
 	int ret;
@@ -34,7 +34,7 @@ unsigned __stdcall thread(void *param) {
 
 	while (!isStop) {
 		ret = recv(connectedSocket, buff, BUFF_SIZE, 0);
-		
+
 		if (ret == SOCKET_ERROR)
 		{
 			printf("Error %d: Cannot receive data.\n", WSAGetLastError());
@@ -49,12 +49,12 @@ unsigned __stdcall thread(void *param) {
 		}
 		else if (strlen(buff) > 0) {
 			buff[ret] = 0;
-			printf("Receive from client[%s:%d]\n",clientIP,clientPort);
-		
+			printf("Receive from client[%s:%d]\n", clientIP, clientPort);
+
 			appendQueue(buff, messageQueue);
-		
-			while (processData(buff, messageQueue,&thisReq)) {
-				
+
+			while (processData(buff, messageQueue, &thisReq)) {
+
 				ret = send(connectedSocket, buff, strlen(buff), 0);
 				if (ret == SOCKET_ERROR) {
 					printf("Error %d:client exited.\n", WSAGetLastError());
@@ -82,48 +82,6 @@ unsigned __stdcall thread(void *param) {
 	return 0;
 }
 
-int count1 = 0;
-
-void printListQuestion() {
-	for (int i = 0;i < count1;i++) {
-		cout << listQuestion[i].question << " " << listQuestion[i].answer << " " << listQuestion[i].options << endl;
-	}
-}
-
-/* The readQuestion function is to read question from file
-* @param no param
-* @return no return value
-*/
-void readQuestion() {
-	ifstream inputFile("question.txt");
-	string line;
-	if (inputFile)
-	{
-		while (getline(inputFile, line))
-		{
-			QuizzInfor q;
-			istringstream ss(line);
-
-			ss >> q.question;
-
-			ss >> q.answer;
-			ss >> q.options[0];
-			ss >> q.options[1];
-			ss >> q.options[2];
-			ss >> q.options[3];
-
-			if (ss)
-			{
-				listQuestion[count1++] = q;
-			}
-		}
-	}
-	else
-	{
-		cout << "File cannot be opened" << std::endl;
-	}
-}
-
 int main(int argc, char* argv[])
 {
 	//init critical section.
@@ -147,7 +105,7 @@ int main(int argc, char* argv[])
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_port = htons(SERVER_PORT);
 	inet_pton(AF_INET, SERVER_ADDR, &serverAddr.sin_addr);
-	if (bind(listenSock, (sockaddr *)&serverAddr, sizeof(serverAddr)))
+	if (bind(listenSock, (sockaddr*)&serverAddr, sizeof(serverAddr)))
 	{
 		printf("Error %d: Cannot associate a local address with server socket.", WSAGetLastError());
 		return 0;
@@ -167,7 +125,7 @@ int main(int argc, char* argv[])
 	char clientIP[INET_ADDRSTRLEN];
 	int clientAddrLen = sizeof(clientAddr), clientPort;
 	while (1) {
-		connSocket = accept(listenSock, (sockaddr *)& clientAddr, &clientAddrLen);
+		connSocket = accept(listenSock, (sockaddr*)&clientAddr, &clientAddrLen);
 		if (connSocket == SOCKET_ERROR)
 			printf("Error %d: Cannot permit incoming connection.\n", WSAGetLastError());
 		else {
@@ -178,7 +136,7 @@ int main(int argc, char* argv[])
 			data.s = connSocket;
 			data.clientIP = clientIP;
 			data.clientPort = clientPort;
-			_beginthreadex(0, 0, thread, (void *)&data, 0, 0); //start thread
+			_beginthreadex(0, 0, thread, (void*)&data, 0, 0); //start thread
 		}
 	}
 
