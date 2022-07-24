@@ -4,6 +4,8 @@
 #include "Global.h"
 
 map<string, int> USERS_STATUS;
+map<string, int> ADMINS_LIST;
+
 CRITICAL_SECTION USER_LOCK;
 CRITICAL_SECTION ROUND_LOCK;
 CRITICAL_SECTION ROOM_LOCK;

@@ -9,19 +9,16 @@
 #include <string>
 #include <fstream>
 #include <sstream>
-#include<vector>
+#include <vector>
 #include <map>
 
-#pragma comment (lib, "Ws2_32.lib")
+#pragma comment(lib, "Ws2_32.lib")
 using namespace std;
-
 
 #define SERVER_PORT 5500
 #define SERVER_ADDR "127.0.0.1"
 #define BUFF_SIZE 2048
 #define DEMILITER "\r\n"
-
-
 
 #define METHOD_LEN 4
 
@@ -41,5 +38,3 @@ using namespace std;
 #define PLAYER_UPDATE_ROOM_INFORMATION "GETI"
 
 // define responses.
-
-
