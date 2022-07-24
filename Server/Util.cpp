@@ -121,6 +121,7 @@ int findIndex(string name) {
 	for (unsigned i = 0; i < rooms.size(); i++) {
 		if (rooms[i].roomName.compare(name) == 0) {
 			index = i;
+			break;
 		}
 	}
 	return index;
