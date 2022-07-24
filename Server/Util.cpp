@@ -74,7 +74,8 @@ string handleLogin(string username, Request* req) {
 		LeaveCriticalSection(&USER_LOCK);
 		req->user = {};
 		req->user.username = username;
-		req->user.role = USER_GUESS;
+		int role = ADMINS_LIST[username];
+		req->user.role = role;
 		return "logged";
 	}
 	LeaveCriticalSection(&USER_LOCK);
@@ -116,15 +117,13 @@ vector<string> split(string s, string delimiter) {
 }
 
 int findIndex(string name) {
-	auto it = std::find_if(rooms.begin(), rooms.end(),
-		[name](const RoomInfor& a)
-		{
-			return a.roomName == name;
-		});
-	if (it == rooms.end())
-		return -1; // or throw, depending on requirements
-	else
-		return it - rooms.begin();
+	int index = -1;
+	for (unsigned i = 0; i < rooms.size(); i++) {
+		if (rooms[i].roomName.compare(name) == 0) {
+			index = i;
+		}
+	}
+	return index;
 }
 
 int count1 = 0;
@@ -172,7 +171,7 @@ void readQuestion() {
 
 string adminCreateRoom(string payload, Request* req) {
 	if (req->isLoggedIn == false) return "not logged in ";
-	//if (req->user.role != USER_ADMIN) return "unauthorization";
+	if (req->user.role != USER_ADMIN) return "unauthorization";
 	vector<string> v = split(payload, "-");
 	if (findIndex(v[0]) >= 0) return "room exists";
 	RoomInfor newRoom;
@@ -185,7 +184,7 @@ string adminCreateRoom(string payload, Request* req) {
 
 string adminStartRoom(string roomName, Request* req) {
 	if (req->isLoggedIn == false) return "not logged in ";
-	//if (req->user.role != USER_ADMIN) return "unauthorization";
+	if (req->user.role != USER_ADMIN) return "unauthorization";
 	int index = findIndex(roomName);
 	if (index ==-1) return "room does not exist";
 	rooms[index].status = ROOM_ACTIVE;
@@ -195,7 +194,7 @@ string adminStartRoom(string roomName, Request* req) {
 
 string adminEndGame(string roomName, Request* req) {
 	if (req->isLoggedIn == false) return "not logged in ";
-	//if (req->user.role != USER_ADMIN) return "unauthorization";
+	if (req->user.role != USER_ADMIN) return "unauthorization";
 	int index = findIndex(roomName);
 	if (index == -1) return "room does not exist";
 	rooms[index].status = ROOM_DEACTIVE;
@@ -206,7 +205,7 @@ string adminEndGame(string roomName, Request* req) {
 
 string adminDeleteRoom(string roomName, Request* req) {
 	if (req->isLoggedIn == false) return "not logged in ";
-	//if (req->user.role != USER_ADMIN) return "unauthorization";
+	if (req->user.role != USER_ADMIN) return "unauthorization";
 	int index = findIndex(roomName);
 	if (index == -1) return "room does not exist";
 	if (rooms[index].status == ROOM_ACTIVE) return "room is active";

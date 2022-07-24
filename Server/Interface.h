@@ -9,9 +9,10 @@
 #define ROOM_ACTIVE 1
 #define ROOM_DEACTIVE 0
 
-struct ThreadInformation {
+struct ThreadInformation
+{
 	SOCKET s;
-	char* clientIP;
+	char *clientIP;
 	int clientPort = 0;
 };
 
@@ -20,7 +21,8 @@ struct User
 	int8_t role = USER_GUESS; // enum USER_XXX;
 	std::string username = "";
 };
-struct Request {
+struct Request
+{
 	User user;
 	std::string ip;
 	int port;
@@ -28,7 +30,8 @@ struct Request {
 	bool isLoggedIn = false;
 };
 
-struct Participant {
+struct Participant
+{
 	std::string username = "";
 	float totalPoint = PARTICIPANT_INIT_POINT;
 	bool isActive = false;
@@ -36,7 +39,8 @@ struct Participant {
 	int8_t skipCount = MAX_SKIP;
 	int currentAnswer = 0;
 };
-struct RoomInfor {
+struct RoomInfor
+{
 	std::string roomName;
 	int currentPaticipants = 0;
 	int maxPaticipants = MAX_USER_PER_ROOM;
@@ -44,13 +48,14 @@ struct RoomInfor {
 	int currentRoundCount = 0;
 	int status = ROOM_DEACTIVE;
 };
-struct QuizzInfor {
+struct QuizzInfor
+{
 	std::string question;
 	std::string options[100];
 	int answer;
 };
-struct RoundInfor {
+struct RoundInfor
+{
 	QuizzInfor quizz;
 	int roundNumber;
-
 };

@@ -3,6 +3,8 @@
 #include "Interface.h"
 
 extern map<string, int> USERS_STATUS;
+extern map<string, int> ADMINS_LIST;
+
 extern QuizzInfor listQuestion[100];
 extern vector<RoomInfor> rooms;
 extern CRITICAL_SECTION ROOM_LOCK;
