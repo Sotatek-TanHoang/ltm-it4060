@@ -17,7 +17,8 @@ string adminStartRoom(string roomName, Request* req);
 string adminEndGame(string roomName, Request* req);
 string adminDeleteRoom(string roomName, Request* req);
 //phu
-
+string userGetRoom(Request *req);
+string userJoinRoom(string roomName, Request *req);
 bool processData(char* buff, char* queue, Request* req);
 
 void appendQueue(char* buff, char* queue);

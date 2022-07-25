@@ -40,10 +40,10 @@ string handleRequest(string message, Request* req) {
 			return adminDeleteRoom(payload, req);
 		}
 		else if (method.compare(PLAYER_GET_ROOMS) == 0) {
-			return "get rooms ok";
+			return userGetRoom(req);
 		}
 		else if (method.compare(PLAYER_JOIN_ROOM) == 0) {
-			return "join ok";
+			return userJoinRoom(payload, req);
 		}
 		else if (method.compare(PLAYER_ANSWER_QUIZZ) == 0) {
 			return "anwser ok";
@@ -215,6 +215,18 @@ string adminDeleteRoom(string roomName, Request* req) {
 }
 
 // phu
+string userGetRoom(Request* req) {
+	if (req->isLoggedIn == false) return "user not logged in";
+	return "room 1";
+}
+
+string userJoinRoom(string roomName, Request *req) {
+	if (req->isLoggedIn == false) return "user not logged in";
+	int index = findIndex(roomName);
+	if (index == -1) return "room does not exist";
+	if (rooms[index].status == ROOM_ACTIVE) rooms[index].currentPaticipants +=1;
+	return "Join room successfully ";
+}
 
 // stable.
 string takeMesage(char* buff) {
