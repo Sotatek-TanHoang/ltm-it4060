@@ -7,7 +7,7 @@
 #define ENDING "\r\n"
 #pragma comment(lib, "Ws2_32.lib")
 char SERVER_ADDR[INET_ADDRSTRLEN] = "127.0.0.1";
-short SERVER_PORT = 5500l;
+short SERVER_PORT = 5500;
 
 using namespace std;
 
