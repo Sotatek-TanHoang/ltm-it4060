@@ -49,37 +49,6 @@ struct Response {
 
 User user;
 Response response;
-/*
-* @function handleByte: process information received from the server
-* @param {SOCKET} client: information of client that receive
-* @return {string} message detail
-*/
-
-string handleByte(SOCKET *client) {
-	string post;
-	int ret;
-	char buff[BUFF_SIZE];
-	while (1) {
-		memset(&buff, 0, sizeof(buff));
-		// Recive echo message
-		ret = recv(*client, buff, BUFF_SIZE, 0);
-		if (ret == SOCKET_ERROR) {
-			cout << "Error " << WSAGetLastError() << ": Cannot receive message";
-			break;
-		}
-		else {
-			buff[ret] = 0;
-			string m = buff;
-			post = post + m;
-			int k = post.find(ENDING);
-			if (k != -1) {
-				string data = post.substr(0, k);
-				return data;
-			}
-		}
-	}
-}
-
 
 /*
 * @function streamProcessing: send byte-stream data
@@ -125,6 +94,44 @@ void streamProcessing(SOCKET *client, string mess) {
 }
 
 
+/*
+* @function handleByte: process information received from the server
+* @param {SOCKET} client: information of client that receive
+* @return {string} message detail
+*/
+
+string handleByte(SOCKET *client) {
+	string post;
+	int ret;
+	char buff[BUFF_SIZE];
+	while (1) {
+		memset(&buff, 0, sizeof(buff));
+		// Recive echo message
+		ret = recv(*client, buff, BUFF_SIZE, 0);
+		if (ret == SOCKET_ERROR) {
+			cout << "Error " << WSAGetLastError() << ": Cannot receive message";
+			break;
+		}
+		else {
+			buff[ret] = 0;
+			string m = buff;
+			post = post + m;
+			int k = post.find(ENDING);
+			if (k != -1) {
+				string data = post.substr(0, k);
+				return data;
+			}
+		}
+	}
+}
+
+/*
+* @function split: split sting by delimiter
+* @param {string} str: the string need to split
+* @param {string} delimiter
+* @return {string}
+*/
+
 string split(string str, string delimiter) {
 	size_t pos = 0;
 	string token;
@@ -136,6 +143,13 @@ string split(string str, string delimiter) {
 	}
 	return str;
 }
+
+/*
+* @function split1: split sting by delimiter
+* @param {string} str: the string need to split
+* @param {string} delimiter
+* @return {vector<string>}
+*/
 
 vector<string> split1(string s, string delimiter) {
 	size_t pos_start = 0, pos_end, delim_len = delimiter.length();
@@ -152,6 +166,11 @@ vector<string> split1(string s, string delimiter) {
 	return res;
 }
 
+/*
+* @function exitRoom: user exit room
+* @param {SOCKET} client: information of client that receive
+* @return void
+*/
 
 void exitRoom(SOCKET *client) {
 	string mess = "25 ";
@@ -166,6 +185,12 @@ void exitRoom(SOCKET *client) {
 	}
 }
 
+/*
+* @function windowLogin: user login into system
+* @param {SOCKET} client: information of client that receive
+* @param {string} username: username
+* @return {string}
+*/
 
 string windowLogin(SOCKET *client, string *username) {
 	cout << "Please choose a option" << endl;
@@ -187,6 +212,13 @@ string windowLogin(SOCKET *client, string *username) {
 	}
 }
 
+/*
+* @function waitQuestion: user wait for next question
+* @param {SOCKET} client: information of client that receive
+* @param {bool} k: flag
+* @return {void}
+*/
+
 void waitQuestion(SOCKET *client, bool *k) {
 	string data = handleByte(client);
 	cout << data;
@@ -203,6 +235,12 @@ void waitQuestion(SOCKET *client, bool *k) {
 		*k = false;
 	}
 }
+
+/*
+* @function answerTheQuestion: user answer question in single thread
+* @param {void*} param
+* @return {__stdcall}
+*/
 
 unsigned __stdcall answerTheQuestion(void* param) {
 	SOCKET *client = (SOCKET *)param;
@@ -232,11 +270,23 @@ unsigned __stdcall answerTheQuestion(void* param) {
 	return 0;
 }
 
+/*
+* @function waitTheAnswer: user wait the question in single thread
+* @param {void*} param
+* @return {__stdcall}
+*/
+
 unsigned __stdcall waitTheAnswer(void* param) {
 	SOCKET *client = (SOCKET *)param;
 	res = handleByte(client);
 	return 0;
 }
+
+/*
+* @function watch: user watch the question in single thread
+* @param {void*} param
+* @return {__stdcall}
+*/
 
 unsigned __stdcall watch(void* param) {
 	if (user.mainPlayer == 1) {
@@ -249,6 +299,12 @@ unsigned __stdcall watch(void* param) {
 	}
 	return 0;
 }
+
+/*
+* @function answerQuestion: user answer question
+* @param {SOCKET} client: information of client that receive
+* @return {void}
+*/
 
 void answerQuestion(SOCKET *client) {
 	bool k = true;
@@ -301,6 +357,14 @@ void answerQuestion(SOCKET *client) {
 	}
 }
 
+/*
+* @function selectRoom: user select room
+* @param {SOCKET} client: information of client that receive
+* @param {string} body: information of room
+* @param {bool} k
+* @return {void}
+*/
+
 void selectRoom(SOCKET *client, string body, bool *k) {
 	cout << body <<endl;
 	split(body, "<br/>");
@@ -343,6 +407,12 @@ void selectRoom(SOCKET *client, string body, bool *k) {
 	}
 }
 
+/*
+* @function showRoom: user watch room
+* @param {SOCKET} client: information of client that receive
+* @return {void}
+*/
+
 void showRoom(SOCKET *client) {
 	bool k = true;
 	while (k) {
@@ -361,6 +431,13 @@ void showRoom(SOCKET *client) {
 		}
 	}
 }
+
+/*
+* @function startRoomAdmin: admin start new room
+* @param {SOCKET} client: information of client that receive
+* @param {string} body: information of room
+* @return {void}
+*/
 
 void startRoomAdmin(SOCKET *client, string body){
 	cout << body<<endl;
@@ -381,6 +458,12 @@ void startRoomAdmin(SOCKET *client, string body){
 		cout << "Room does not exits"<<endl;
 	}
 }
+
+/*
+* @function startRoom: user join new room
+* @param {SOCKET} client: information of client that receive
+* @return {void}
+*/
 
 void startRoom(SOCKET *client) {
 	string mess = "GETQ ";
@@ -410,6 +493,12 @@ void startRoom(SOCKET *client) {
 //	}
 //}
 
+/*
+* @function adminLogout: admin start new room
+* @param {SOCKET} client: information of client that receive
+* @return {void}
+*/
+
 void adminLogout(SOCKET *client) {
 	string mess = "QUIT ";
 	streamProcessing(client, mess);
@@ -422,6 +511,12 @@ void adminLogout(SOCKET *client) {
 		cout << response.user12 << endl;
 	}
 }
+
+/*
+* @function windowAdmin: show admin page
+* @param {SOCKET} client: information of client that receive
+* @return {void}
+*/
 
 void windowAdmin(SOCKET *client) {
 	while (1) {
