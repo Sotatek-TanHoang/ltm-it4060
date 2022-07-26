@@ -106,7 +106,7 @@ int main(int argc, char* argv[])
 	one.options = {
 		"ANSWER","A","B"
 	};
-	one.question = "any thing";
+	one.question = "Con nguoi co may chan";
 	listQuestion.push_back(one);
 
 
