@@ -313,8 +313,24 @@ string playerAnswerQuizz(string payload, Request* req) {
 					break;
 				}
 			}
+			// if main player skip a roun
+			if (targetRoom->participants[i].currentAnswer == SKIP_THIS_ROUND && targetRoom->participants[i].isMainPlayer==true) {
+				if (targetRoom->participants[i].skipCount > 0) {
+					accepted = true;
+					targetRoom->participants[i].skipCount -= 1;
+					break;
+				}
+				else {
+					accepted = false;
+					break;
+				}
+			}
+			
+
 			targetRoom->participants[i].currentAnswer = atoi(&anwser[0]);
 			targetRoom->participants[i].submitTime = now;
+			
+
 			accepted = true;
 			break;
 		}

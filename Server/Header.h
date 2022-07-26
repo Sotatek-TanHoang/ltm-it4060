@@ -22,7 +22,7 @@ using namespace std;
 #define DEMILITER "\r\n"
 
 #define METHOD_LEN 4
-
+#define SKIP_THIS_ROUND 99
 // define method.
 #define USER_LOGIN "USER"
 #define USER_LOGOUT "QUIT"

@@ -1,5 +1,5 @@
 #include "Game.h"
-#define SKIP_THIS_ROUND 99
+
 void bulkSend(vector<Participant> * p,string message) {
 	
 
@@ -184,7 +184,9 @@ string selectMainPlayer(RoomInfor * room, QuizzInfor quizz) {
 	}
 	if (index >= 0) {
 		room->participants[index].isMainPlayer = true;
+		room->participants[index].skipCount = 2;
 		room->currentMainPlayer = fastest;
+
 	}
 	string isGameEnd = room->participants.size() <= 1 ? "1" : "0";
 
@@ -251,6 +253,7 @@ string calculateNormalRound(RoomInfor * room, QuizzInfor quizz) {
 				}
 		
 			nextRoundParticipants[index].isMainPlayer = true;
+			nextRoundParticipants[index].skipCount = 2;
 			room->currentMainPlayer = fastest;
 		}
 		
