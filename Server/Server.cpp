@@ -11,6 +11,7 @@ CRITICAL_SECTION ROUND_LOCK;
 CRITICAL_SECTION ROOM_LOCK;
 QuizzInfor listQuestion[100];
 vector<RoomInfor> rooms;
+int PORT_COUNTER;
 
 
 unsigned __stdcall thread(void* param) {
@@ -63,6 +64,7 @@ unsigned __stdcall thread(void* param) {
 					isStop = true;
 					break;
 				}
+				
 			}
 		}
 	}
@@ -86,6 +88,14 @@ unsigned __stdcall thread(void* param) {
 
 int main(int argc, char* argv[])
 {
+	ADMINS_LIST["tan"] = USER_ADMIN;
+	ADMINS_LIST["duc"] = USER_ADMIN;
+	ADMINS_LIST["phu"] = USER_ADMIN;
+	PORT_COUNTER = SERVER_PORT + 1;
+	RoomInfor newRoom = {};
+	newRoom.broadcastPort = PORT_COUNTER + 1;
+	newRoom.roomName = "LTM-IT4060-nhom-15";
+	rooms.push_back(newRoom);
 	//init critical section.
 	InitializeCriticalSection(&USER_LOCK);
 	InitializeCriticalSection(&ROOM_LOCK);
@@ -141,7 +151,7 @@ int main(int argc, char* argv[])
 			_beginthreadex(0, 0, thread, (void*)&data, 0, 0); //start thread
 		}
 	}
-
+	
 	closesocket(listenSock);
 
 	WSACleanup();

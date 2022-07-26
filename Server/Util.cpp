@@ -1,6 +1,17 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include "Util.h"
 
+bool isExist(string username, vector<Participant> * members) {
+	for (unsigned i = 0; i < members->size(); i++) {
+		if (username.compare(members->at(i).username) == 0) {
+			return true;
+		}
+	}
+	return false;
+}
+string formatResponse(string code,string payload="") {
+	return code+" "+ payload  + DEMILITER;
+}
 string handleRequest(string message, Request* req) {
 	try
 	{
@@ -12,7 +23,7 @@ string handleRequest(string message, Request* req) {
 		}
 		catch (const std::exception&)
 		{
-			payload = "";
+			payload = formatResponse(ACTION_FAILED);
 		}
 		// login
 
@@ -40,16 +51,16 @@ string handleRequest(string message, Request* req) {
 			return adminDeleteRoom(payload, req);
 		}
 		else if (method.compare(PLAYER_GET_ROOMS) == 0) {
-			return "get rooms ok";
+			return userGetRooms(payload,req);
 		}
 		else if (method.compare(PLAYER_JOIN_ROOM) == 0) {
-			return "join ok";
+			return playerJoinRoom(payload,req);
 		}
 		else if (method.compare(PLAYER_ANSWER_QUIZZ) == 0) {
-			return "anwser ok";
+			return playerAnswerQuizz(payload,req);
 		}
 		else if (method.compare(PLAYER_EXIT_ROOM) == 0) {
-			return "exit room ok";
+			return playerQuitRoom(payload,req);
 		}
 		else if (method.compare(PLAYER_UPDATE_ROOM_INFORMATION) == 0) {
 			return "update ok";
@@ -59,14 +70,14 @@ string handleRequest(string message, Request* req) {
 	{
 		return "internal server error";
 	}
-
+	cout << "here" << endl;
 	return "unknown";
 
 }
 // tan
 string handleLogin(string username, Request* req) {
 	cout << req->user.username << '.' << endl;
-	if (req->isLoggedIn == true) return "logged in";
+	if (req->isLoggedIn == true) return formatResponse(LOGIN_FAILED);
 	EnterCriticalSection(&USER_LOCK);
 	if (USERS_STATUS[username] == 0) {
 		USERS_STATUS[username] = 1;
@@ -76,14 +87,14 @@ string handleLogin(string username, Request* req) {
 		req->user.username = username;
 		int role = ADMINS_LIST[username];
 		req->user.role = role;
-		return "logged";
+		return formatResponse(LOGIN_OK,username+PAYLOAD_SEPERATER+to_string(role));
 	}
 	LeaveCriticalSection(&USER_LOCK);
-	return "username duplicated";
+	return formatResponse(LOGIN_FAILED);
 }
 string handleLogout(Request* req) {
 
-	if (req->isLoggedIn == false) return "not logged in ";
+	if (req->isLoggedIn == false) return formatResponse(LOGOUT_FAILED);
 
 	EnterCriticalSection(&USER_LOCK);
 	if (USERS_STATUS[req->user.username] == 1) {
@@ -93,11 +104,11 @@ string handleLogout(Request* req) {
 		LeaveCriticalSection(&USER_LOCK);
 		req->user = {};
 
-		return "logged out";
+		return formatResponse(LOGOUT_OK);
 	}
 	LeaveCriticalSection(&USER_LOCK);
 
-	return "log out failed";
+	return formatResponse(LOGOUT_FAILED);
 }
 // duc
 
@@ -127,95 +138,190 @@ int findIndex(string name) {
 	return index;
 }
 
-int count1 = 0;
-
-void printListQuestion() {
-	for (int i = 0;i < count1;i++) {
-		cout << listQuestion[i].question << " " << listQuestion[i].answer << " " << listQuestion[i].options << endl;
-	}
-}
-
-/* The readQuestion function is to read question from file
-* @param no param
-* @return no return value
-*/
-void readQuestion() {
-	ifstream inputFile("question.txt");
-	string line;
-	if (inputFile)
-	{
-		while (getline(inputFile, line))
-		{
-			QuizzInfor q;
-			istringstream ss(line);
-
-			ss >> q.question;
-
-			ss >> q.answer;
-			ss >> q.options[0];
-			ss >> q.options[1];
-			ss >> q.options[2];
-			ss >> q.options[3];
-
-			if (ss)
-			{
-				listQuestion[count1++] = q;
-			}
-		}
-	}
-	else
-	{
-		cout << "File cannot be opened" << std::endl;
-	}
-}
-
-
 string adminCreateRoom(string payload, Request* req) {
-	if (req->isLoggedIn == false) return "not logged in ";
-	if (req->user.role != USER_ADMIN) return "unauthorization";
-	vector<string> v = split(payload, "-");
-	if (findIndex(v[0]) >= 0) return "room exists";
+	return formatResponse(ACTION_FAILED);
+	if (req->isLoggedIn == false) return formatResponse(NOT_LOGGED_IN);
+	if (req->user.role != USER_ADMIN) return formatResponse(UNAUTHORIZED);
+	vector<string> v = split(payload, PAYLOAD_SEPERATER);
+	if (findIndex(v[0]) >= 0) return formatResponse(ADMIN_EXISTED_ROOM);
 	RoomInfor newRoom;
 	newRoom.roomName = v[0];
 	newRoom.maxRound = stoi(v[1]);
 	newRoom.maxPaticipants = stoi(v[2]);
 	rooms.push_back(newRoom);
-	return "create room ok";
+	return formatResponse(ADMIN_CREATE_ROOM_OK,newRoom.roomName);
 }
 
 string adminStartRoom(string roomName, Request* req) {
-	if (req->isLoggedIn == false) return "not logged in ";
-	if (req->user.role != USER_ADMIN) return "unauthorization";
+	if (req->isLoggedIn == false) formatResponse(NOT_LOGGED_IN);
+	if (req->user.role != USER_ADMIN) return formatResponse(UNAUTHORIZED);
 	int index = findIndex(roomName);
-	if (index ==-1) return "room does not exist";
-	rooms[index].status = ROOM_ACTIVE;
-	readQuestion();
-	return "start room ok";
+	if (index ==-1) return formatResponse(ADMIN_NON_EXISTED_ROOM);
+	RoomInfor * params = &rooms[index];
+	params->status = ROOM_ACTIVE;
+	params->broadcastPort = ++PORT_COUNTER;
+	_beginthreadex(0, 0, startGame, (void*)params, 0, 0); //start game in a new thread
+	return formatResponse(GAME_STARTED);
 }
 
 string adminEndGame(string roomName, Request* req) {
-	if (req->isLoggedIn == false) return "not logged in ";
+	return formatResponse(ACTION_FAILED);
+	/*if (req->isLoggedIn == false) return "not logged in ";
 	if (req->user.role != USER_ADMIN) return "unauthorization";
 	int index = findIndex(roomName);
 	if (index == -1) return "room does not exist";
-	rooms[index].status = ROOM_DEACTIVE;
+	rooms[index].isEnded = true;
 	rooms[index].currentRoundCount = 0;
-	rooms[index].currentPaticipants = 0;
-	return "end game ok";
+
+	return "end game ok";*/
 }
 
 string adminDeleteRoom(string roomName, Request* req) {
-	if (req->isLoggedIn == false) return "not logged in ";
+	return formatResponse(ACTION_FAILED);
+	/*if (req->isLoggedIn == false) return "not logged in ";
 	if (req->user.role != USER_ADMIN) return "unauthorization";
 	int index = findIndex(roomName);
 	if (index == -1) return "room does not exist";
 	if (rooms[index].status == ROOM_ACTIVE) return "room is active";
 	rooms.erase(rooms.begin() + index);
-	return "delete ok";
+	return "delete ok";*/
 }
 
 // phu
+string userGetRooms(string payload, Request * req) {
+	if (req->isLoggedIn == false) return formatResponse(NOT_LOGGED_IN);
+	string roomList = "";
+	for (unsigned i = 0; i < rooms.size(); ++i) {
+		roomList += rooms[i].roomName;
+		if (i < rooms.size() - 1) {
+			roomList += PAYLOAD_SEPERATER;
+		}
+	}
+	return formatResponse(GET_ROOM_OK, roomList);
+};
+string playerJoinRoom(string payload, Request* req) {
+	if (req->isLoggedIn == false) return formatResponse(NOT_LOGGED_IN);
+	if (req->user.role != USER_GUESS) return formatResponse(UNAUTHORIZED);
+	const string roomName = payload;
+	RoomInfor * targetRoom=NULL;
+	EnterCriticalSection(&ROOM_LOCK);
+	// find room
+	for (unsigned i = 0; i < rooms.size(); ++i) {
+		if (rooms[i].roomName.compare(roomName) == 0) {
+			targetRoom = &rooms[i];
+			break;
+		}
+	}
+	if (targetRoom == NULL) {
+		LeaveCriticalSection(&ROOM_LOCK);
+		return formatResponse(ROOM_NOT_EXIST);
+	}
 
+	Participant newParticipant = {};
+	newParticipant.username = req->user.username;
+	newParticipant.isMainPlayer = false;
+	newParticipant.isActive = true;
+	newParticipant.totalPoint = 10;
+	newParticipant.skipCount = 0;
+	newParticipant.currentAnswer = -1;
+	if (!isExist(req->user.username, &targetRoom->participants)) {
+		cout << "user " << req->user.username << "join room " << targetRoom->roomName << endl;
+		targetRoom->participants.push_back(newParticipant);
+	}
+
+	LeaveCriticalSection(&ROOM_LOCK);
+	return formatResponse(JOIN_ROOM_OK, roomName+PAYLOAD_SEPERATER+to_string(targetRoom->broadcastPort));
+
+};
+string playerQuitRoom(string payload, Request* req) {
+	if (req->isLoggedIn == false) return formatResponse(NOT_LOGGED_IN);
+	if (req->user.role != USER_GUESS) return formatResponse(UNAUTHORIZED);
+	const string roomName = payload;
+	RoomInfor * targetRoom = NULL;
+	EnterCriticalSection(&ROOM_LOCK);
+	for (unsigned i = 0; i < rooms.size(); ++i) {
+		if (rooms[i].roomName.compare(roomName) == 0) {
+			targetRoom = &rooms[i];
+			break;
+		}
+	}
+	if (targetRoom == NULL) {
+		LeaveCriticalSection(&ROOM_LOCK);
+		return formatResponse(ROOM_NOT_EXIST);
+	}
+	
+	for (unsigned i = 0; i < targetRoom->participants.size(); ++i) {
+		if (targetRoom->participants[i].username.compare(req->user.username)==0) {
+			// remove from vector.
+			targetRoom->participants.erase(targetRoom->participants.begin()+i);
+			break;
+		}
+	}
+	LeaveCriticalSection(&ROOM_LOCK);
+	
+	return formatResponse(ACTION_SUCCESS);
+}
+string playerAnswerQuizz(string payload, Request* req) {
+	
+	
+
+	if (req->isLoggedIn == false) return formatResponse(NOT_LOGGED_IN);
+	if (req->user.role != USER_GUESS) return formatResponse(UNAUTHORIZED);
+
+
+	vector<string> data = split(payload, PAYLOAD_SEPERATER);
+	const string roomName = data[0];
+	const string quizzID = data[1];
+	const string anwser = data[2];
+
+	RoomInfor * targetRoom = NULL;
+	EnterCriticalSection(&ROOM_LOCK);
+	for (unsigned i = 0; i < rooms.size(); ++i) {
+		if (rooms[i].roomName.compare(roomName) == 0) {
+			targetRoom = &rooms[i];
+			break;
+		}
+	}
+	if (targetRoom == NULL) {
+		LeaveCriticalSection(&ROOM_LOCK);
+		return formatResponse(ROOM_NOT_EXIST);
+	}
+	bool accepted = false;
+	time_t now;
+	// current timestamp in seconds.
+	now = time(NULL);
+
+	for (unsigned i = 0; i < targetRoom->participants.size(); ++i) {
+		if (targetRoom->participants[i].username.compare(req->user.username) == 0) {
+			// remove from vector.
+			if (targetRoom->currentRoundCount > atoi(&quizzID[0])) {
+				accepted = false;
+				break;
+			}
+			if (req->user.username.compare(targetRoom->currentMainPlayer) == 0) {
+				if (now > targetRoom->mainPlayerTimestamp) {
+					accepted = false;
+					break;
+				}
+			}
+			else {
+				if (now > targetRoom->subPlayerTimestamp) {
+					accepted = false;
+					break;
+				}
+			}
+			targetRoom->participants[i].currentAnswer = atoi(&anwser[0]);
+			targetRoom->participants[i].submitTime = now;
+			accepted = true;
+			break;
+		}
+	}
+	LeaveCriticalSection(&ROOM_LOCK);
+	if (!accepted) {
+		return formatResponse(ACTION_FAILED);
+	}
+	return formatResponse(ACTION_SUCCESS);
+}
 // stable.
 string takeMesage(char* buff) {
 	string src(buff);

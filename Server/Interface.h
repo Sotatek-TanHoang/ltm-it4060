@@ -38,21 +38,28 @@ struct Participant
 	bool isMainPlayer = false;
 	int8_t skipCount = MAX_SKIP;
 	int currentAnswer = 0;
+	int submitTime;
 };
 struct RoomInfor
 {
 	std::string roomName;
-	int currentPaticipants = 0;
 	int maxPaticipants = MAX_USER_PER_ROOM;
 	int maxRound = MAX_ROUND_PER_ROOM;
+	string currentMainPlayer = "";
 	int currentRoundCount = 0;
 	int status = ROOM_DEACTIVE;
+	int isEnded = false;
+	vector<Participant> participants;
+	int broadcastPort;
+	long int mainPlayerTimestamp;
+	long int subPlayerTimestamp;
 };
 struct QuizzInfor
 {
 	std::string question;
-	std::string options[100];
+	vector<string> options;
 	int answer;
+	
 };
 struct RoundInfor
 {
