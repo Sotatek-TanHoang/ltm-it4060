@@ -11,7 +11,8 @@ private:
 	char recvString[MAXRECVSTRING + 1];
 
 public:
-	BroadcastReceiver(string address, int port)
+	string lastResult;
+	BroadcastReceiver(int port)
 	{
 		int sock;						  /* Socket */
 		struct sockaddr_in broadcastAddr; /* Broadcast Address */
@@ -41,7 +42,8 @@ public:
 
 		recvString[recvLen] = '\0';
 
-		return string(recvString);
+		lastResult= string(recvString);
+		return lastResult;
 	}
 	void cleanup()
 	{

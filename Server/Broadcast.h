@@ -2,7 +2,6 @@
 #include "Header.h"
 #include "Interface.h"
 
-int initBroadcast(string ip, unsigned short port);
 void DieWithError(char *errorMessage);
 
 class Broadcaster
@@ -17,7 +16,7 @@ public:
 		broadcastAddr.sin_addr.s_addr = inet_addr(&address[0]); /* Broadcast IP address */
 		broadcastAddr.sin_port = htons(port);					/* Broadcast port */
 
-		int sock;				  /* Socket */
+		SOCKET sock;				  /* Socket */
 		BOOL broadcastPermission; /* Socket opt to set permission to broadcast */
 
 		if ((sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)

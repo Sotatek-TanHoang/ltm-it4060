@@ -10,3 +10,5 @@ extern vector<RoomInfor> rooms;
 extern CRITICAL_SECTION ROOM_LOCK;
 extern CRITICAL_SECTION USER_LOCK;
 extern CRITICAL_SECTION ROUND_LOCK;
+
+extern int PORT_COUNTER;
