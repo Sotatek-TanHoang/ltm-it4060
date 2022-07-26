@@ -28,6 +28,7 @@ struct Request
 	int port;
 	int threadId;
 	bool isLoggedIn = false;
+	SOCKET socket;
 };
 
 struct Participant
@@ -39,6 +40,7 @@ struct Participant
 	int8_t skipCount = MAX_SKIP;
 	int currentAnswer = 0;
 	int submitTime;
+	SOCKET userSocket;
 };
 struct RoomInfor
 {

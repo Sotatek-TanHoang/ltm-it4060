@@ -192,9 +192,11 @@ string userGetRooms(string payload, Request * req) {
 	if (req->isLoggedIn == false) return formatResponse(NOT_LOGGED_IN);
 	string roomList = "";
 	for (unsigned i = 0; i < rooms.size(); ++i) {
-		roomList += rooms[i].roomName;
-		if (i < rooms.size() - 1) {
-			roomList += PAYLOAD_SEPERATER;
+		if (rooms[i].status == ROOM_DEACTIVE) {
+			roomList += rooms[i].roomName;
+			if (i < rooms.size() - 1) {
+				roomList += PAYLOAD_SEPERATER;
+			}
 		}
 	}
 	return formatResponse(GET_ROOM_OK, roomList);
@@ -207,7 +209,7 @@ string playerJoinRoom(string payload, Request* req) {
 	EnterCriticalSection(&ROOM_LOCK);
 	// find room
 	for (unsigned i = 0; i < rooms.size(); ++i) {
-		if (rooms[i].roomName.compare(roomName) == 0) {
+		if (rooms[i].roomName.compare(roomName) == 0 && rooms[i].status==ROOM_DEACTIVE) {
 			targetRoom = &rooms[i];
 			break;
 		}
@@ -224,6 +226,7 @@ string playerJoinRoom(string payload, Request* req) {
 	newParticipant.totalPoint = 10;
 	newParticipant.skipCount = 0;
 	newParticipant.currentAnswer = -1;
+	newParticipant.userSocket = req->socket;
 	if (!isExist(req->user.username, &targetRoom->participants)) {
 		cout << "user " << req->user.username << "join room " << targetRoom->roomName << endl;
 		targetRoom->participants.push_back(newParticipant);

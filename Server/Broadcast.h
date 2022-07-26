@@ -13,7 +13,8 @@ public:
 	{
 		memset(&broadcastAddr, 0, sizeof(broadcastAddr));		/* Zero out structure */
 		broadcastAddr.sin_family = AF_INET;						/* Internet address family */
-		broadcastAddr.sin_addr.s_addr = inet_addr(&address[0]); /* Broadcast IP address */
+		broadcastAddr.sin_addr.s_addr = inet_addr("255.255.255.255");
+        //broadcastAddr.sin_addr.s_addr = inet_addr(&address[0]); /* Broadcast IP address */
 		broadcastAddr.sin_port = htons(port);					/* Broadcast port */
 
 		SOCKET sock;				  /* Socket */
@@ -34,7 +35,7 @@ public:
 		const char *buff = &message[0];
 		if (sendto(broadcastSock, buff, strlen(buff), 0, (struct sockaddr *)&broadcastAddr, sizeof(broadcastAddr)) != strlen(buff))
 			DieWithError("sendto() sent a different number of bytes than expected");
-		printf("sented %s", &message[0]);
+		printf("sented %s\n", &message[0]);
 	}
 	void cleanup()
 	{

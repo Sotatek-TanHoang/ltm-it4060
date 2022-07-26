@@ -9,9 +9,10 @@ map<string, int> ADMINS_LIST;
 CRITICAL_SECTION USER_LOCK;
 CRITICAL_SECTION ROUND_LOCK;
 CRITICAL_SECTION ROOM_LOCK;
-QuizzInfor listQuestion[100];
+vector<QuizzInfor> listQuestion;
 vector<RoomInfor> rooms;
 int PORT_COUNTER;
+
 
 
 unsigned __stdcall thread(void* param) {
@@ -34,6 +35,7 @@ unsigned __stdcall thread(void* param) {
 	thisReq.threadId = 1;
 	thisReq.isLoggedIn = false;
 	thisReq.user = {};
+	thisReq.socket = connectedSocket;
 
 	while (!isStop) {
 		ret = recv(connectedSocket, buff, BUFF_SIZE, 0);
@@ -94,8 +96,20 @@ int main(int argc, char* argv[])
 	PORT_COUNTER = SERVER_PORT + 1;
 	RoomInfor newRoom = {};
 	newRoom.broadcastPort = PORT_COUNTER + 1;
-	newRoom.roomName = "LTM-IT4060-nhom-15";
+	newRoom.roomName = "nhom-15";
 	rooms.push_back(newRoom);
+
+	// add some quizz.
+
+	QuizzInfor one;
+	one.answer = 1;
+	one.options = {
+		"ANSWER","A","B"
+	};
+	one.question = "any thing";
+	listQuestion.push_back(one);
+
+
 	//init critical section.
 	InitializeCriticalSection(&USER_LOCK);
 	InitializeCriticalSection(&ROOM_LOCK);

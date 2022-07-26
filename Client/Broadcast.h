@@ -37,12 +37,16 @@ public:
 	string receiveFromBroadcast()
 	{
 		int recvLen = 0;
-		if ((recvLen = recvfrom(broadcastSock, recvString, MAXRECVSTRING, 0, NULL, 0)) < 0)
-			DieWithError("recvfrom() failed");
+		if ((recvLen = recvfrom(broadcastSock, recvString, MAXRECVSTRING, 0, NULL, 0)) < 0) {
+			lastResult = "Null";
+		}
+		else {
+
 
 		recvString[recvLen] = '\0';
-
 		lastResult= string(recvString);
+
+		}
 		return lastResult;
 	}
 	void cleanup()

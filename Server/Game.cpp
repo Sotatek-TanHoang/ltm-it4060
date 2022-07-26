@@ -1,16 +1,38 @@
 #include "Game.h"
 #define SKIP_THIS_ROUND 99
+void bulkSend(vector<Participant> * p,string message) {
+	
+
+	for (unsigned i = 0; i < p->size(); i++) {
+		try
+		{
+			const char * buff = &message[0];
+			send(p->at(i).userSocket, buff, strlen(buff), 0);
+		}
+		catch (const std::exception&)
+		{
+			cout << "failed to send to client" << p->at(i).username << endl;
+		}
+	}
+	
+}
 QuizzInfor randomQuizz() {
-	return{};
+	return listQuestion[0];
 }
 string formatBroadcast(string code, string payload="") {
-	return code + " " + payload;
+	return code + " " + payload+DEMILITER;
 }
 string formatQuizz(QuizzInfor quizz) {
 	string result = "";
 	result += quizz.question+PAYLOAD_SEPERATER;
 
 	// add options here.
+	for (unsigned i = 0; i < quizz.options.size(); ++i) {
+		result += quizz.options.at(i);
+		if (i < quizz.options.size() - 1) {
+			result += PAYLOAD_SEPERATER;
+		}
+	}
 	return result;
 }
 unsigned __stdcall startGame(void* param) {
@@ -18,7 +40,7 @@ unsigned __stdcall startGame(void* param) {
 	RoomInfor * infor=(RoomInfor *) param;
 
 	
-	Broadcaster server = Broadcaster("127.0.0.1",infor->broadcastPort);
+	
 	
 	// game data.
 	string currentMainPlayer = "";
@@ -26,7 +48,7 @@ unsigned __stdcall startGame(void* param) {
 	QuizzInfor currentQuizz;
 	string broadcast_message, payload;
 	// notify clients to start game.
-	server.bulkSend("game start + roomID");
+	bulkSend(&infor->participants,"game start + roomID");
 	Sleep(1000);
 	// start game.
 
@@ -34,7 +56,8 @@ unsigned __stdcall startGame(void* param) {
 		currentRound++;
 		QuizzInfor thisRoundQuizz;
 		bool isNormalRound = checkIsMainPlayerExist(infor->currentMainPlayer);
-
+		cout << "load quizz " << isNormalRound << endl;
+		vector<Participant> temp = vector<Participant>(infor->participants);
 		if (isNormalRound) {
 				// normal round.
 			thisRoundQuizz = setupNormalRound(infor);
@@ -48,14 +71,15 @@ unsigned __stdcall startGame(void* param) {
 		// send quizz to all players
 		payload = infor->roomName+PAYLOAD_SEPERATER+to_string(currentRound)+PAYLOAD_SEPERATER+ formatQuizz(thisRoundQuizz);
 		broadcast_message = formatBroadcast(BROADCAST_NEW_ROUND_QUIZZ, payload);
-		server.bulkSend(broadcast_message);
+		bulkSend(&temp,broadcast_message);
 		
 		//wait until time limit.
 		//60s
-		Sleep(60 * 1000);
+		cout << "wait result " << endl;
+		Sleep(5 * 1000);
 
 		// calculate result;
-		
+		cout << "calc result " << endl;
 		if (isNormalRound) {
 			payload=calculateNormalRound(infor,thisRoundQuizz);
 		}
@@ -63,14 +87,15 @@ unsigned __stdcall startGame(void* param) {
 			payload=selectMainPlayer(infor,thisRoundQuizz);
 		}
 
-
+		cout << "send result " << endl;
 		// send result to client: roomName, round, anwser, mainplayer,1.
 		broadcast_message=formatBroadcast(BROADCAST_GAME_RESULT,payload);
-		server.bulkSend(broadcast_message);
+		bulkSend(&infor->participants, broadcast_message);
+		cout << "clean up result " << endl;
 		//delay for clients to get ready.
 		Sleep(5000);
 		//cleanup
-		EnterCriticalSection(&ROOM_LOCK);
+		
 		if (infor->isEnded == true || infor->participants.size()<=1) {
 			
 			isStop = true;
@@ -89,27 +114,27 @@ unsigned __stdcall startGame(void* param) {
 			}
 		}
 		
-		LeaveCriticalSection(&ROOM_LOCK);
-
+		
+		cout << "loop again" << endl;
 		// this is end of one round.
 		continue;
 	}
 	// game end.
 	// send: winner, points, round.
 	Sleep(2000);
-	server.bulkSend(string(GAME_ENDED)+PAYLOAD_SEPERATER+infor->roomName);
+	cout << "game end" << endl;
+	bulkSend(&infor->participants,string(GAME_ENDED)+PAYLOAD_SEPERATER+infor->roomName);
 
 	// cleanup.
-	EnterCriticalSection(&ROOM_LOCK);
 	infor->participants = vector<Participant>();
 	infor->status = ROOM_DEACTIVE;
-	LeaveCriticalSection(&ROOM_LOCK);
+
 	// game end here.
 	return 0;
 }
 
 bool checkIsMainPlayerExist(string name) {
-	return name.compare("") == 0;
+	return name.compare("") != 0;
 };
 
 QuizzInfor setupSelectMainPlayer(RoomInfor * room) {
