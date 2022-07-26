@@ -65,6 +65,7 @@ using namespace std;
 
 #define ADMIN_CREATE_ROOM_OK "60"
 #define ADMIN_DELETE_ROOM_OK "61"
+
 #define ADMIN_EXISTED_ROOM "62"
 #define ADMIN_NON_EXISTED_ROOM "63"
 

@@ -228,12 +228,12 @@ string playerJoinRoom(string payload, Request* req) {
 	newParticipant.currentAnswer = -1;
 	newParticipant.userSocket = req->socket;
 	if (!isExist(req->user.username, &targetRoom->participants)) {
-		cout << "user " << req->user.username << "join room " << targetRoom->roomName << endl;
+		cout << "user " << req->user.username << " join room " << targetRoom->roomName << endl;
 		targetRoom->participants.push_back(newParticipant);
 	}
 
 	LeaveCriticalSection(&ROOM_LOCK);
-	return formatResponse(JOIN_ROOM_OK, roomName+PAYLOAD_SEPERATER+to_string(targetRoom->broadcastPort));
+	return formatResponse(JOIN_ROOM_OK, roomName);
 
 };
 string playerQuitRoom(string payload, Request* req) {
