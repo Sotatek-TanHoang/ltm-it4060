@@ -51,17 +51,10 @@ string handleRequest(string message, Request* req) {
 			return adminDeleteRoom(payload, req);
 		}
 		else if (method.compare(PLAYER_GET_ROOMS) == 0) {
-<<<<<<< HEAD
 			return userGetRooms(payload,req);
 		}
 		else if (method.compare(PLAYER_JOIN_ROOM) == 0) {
 			return playerJoinRoom(payload,req);
-=======
-			return userGetRoom(req);
-		}
-		else if (method.compare(PLAYER_JOIN_ROOM) == 0) {
-			return userJoinRoom(payload, req);
->>>>>>> 344db0b9d1f9dc8041188df49faa4959072ca5af
 		}
 		else if (method.compare(PLAYER_ANSWER_QUIZZ) == 0) {
 			return playerAnswerQuizz(payload,req);
@@ -195,7 +188,6 @@ string adminDeleteRoom(string roomName, Request* req) {
 }
 
 // phu
-<<<<<<< HEAD
 string userGetRooms(string payload, Request * req) {
 	if (req->isLoggedIn == false) return formatResponse(NOT_LOGGED_IN);
 	string roomList = "";
@@ -226,20 +218,6 @@ string playerJoinRoom(string payload, Request* req) {
 		LeaveCriticalSection(&ROOM_LOCK);
 		return formatResponse(ROOM_NOT_EXIST);
 	}
-=======
-string userGetRoom(Request* req) {
-	if (req->isLoggedIn == false) return "user not logged in";
-	return "room 1";
-}
-
-string userJoinRoom(string roomName, Request *req) {
-	if (req->isLoggedIn == false) return "user not logged in";
-	int index = findIndex(roomName);
-	if (index == -1) return "room does not exist";
-	if (rooms[index].status == ROOM_ACTIVE) rooms[index].currentPaticipants +=1;
-	return "Join room successfully ";
-}
->>>>>>> 344db0b9d1f9dc8041188df49faa4959072ca5af
 
 	Participant newParticipant = {};
 	newParticipant.username = req->user.username;
