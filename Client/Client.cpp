@@ -315,6 +315,8 @@ void selectRoom(SOCKET *client, string body, bool *k) {
 		mess = "JOIN " + mess;
 		streamProcessing(client, mess);
 		string data = handleByte(client);
+		Sleep(1000);
+		cout << "from join " << data << endl;
 		data = data.substr(0, 2);
 		if (data == "30") {
 			cout << response.join90 << endl;

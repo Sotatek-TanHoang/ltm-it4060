@@ -48,7 +48,7 @@ unsigned __stdcall startGame(void* param) {
 	QuizzInfor currentQuizz;
 	string broadcast_message, payload;
 	// notify clients to start game.
-	bulkSend(&infor->participants,string(GAME_STARTED )+PAYLOAD_SEPERATER+infor->roomName);
+	//bulkSend(&infor->participants,string(GAME_STARTED )+PAYLOAD_SEPERATER+infor->roomName);
 	Sleep(1000);
 	// start game.
 
