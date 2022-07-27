@@ -76,7 +76,7 @@ unsigned __stdcall startGame(void* param) {
 		//wait until time limit.
 		//60s
 		cout << "wait result " << endl;
-		Sleep(60 * 1000);
+		Sleep(20 * 1000);
 
 		// calculate result;
 		cout << "calc result " << endl;

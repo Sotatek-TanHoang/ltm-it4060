@@ -5,11 +5,13 @@
 #define BUFF_SIZE 2048 
 #include <vector>
 #define ENDING "\r\n"
+#define SPACE "<br/>"
 #pragma comment(lib, "Ws2_32.lib")
 char SERVER_ADDR[INET_ADDRSTRLEN] = "127.0.0.1";
 short SERVER_PORT = 5500;
-
+string preMainPlayer = "";
 using namespace std;
+
 
 HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE); // used for goto
 COORD CursorPosition; // used for goto
@@ -18,8 +20,9 @@ string res;
 
 struct User {
 	string username;
-	int mainPlayer = 1;
-	int round = 0;
+	int mainPlayer = 0;
+	string round = "";
+	string room = "";
 };
 
 struct Response {
@@ -49,6 +52,37 @@ struct Response {
 
 User user;
 Response response;
+/*
+* @function handleByte: process information received from the server
+* @param {SOCKET} client: information of client that receive
+* @return {string} message detail
+*/
+
+string handleByte(SOCKET *client) {
+	string post;
+	int ret;
+	char buff[BUFF_SIZE];
+	while (1) {
+		memset(&buff, 0, sizeof(buff));
+		// Recive echo message
+		ret = recv(*client, buff, BUFF_SIZE, 0);
+		if (ret == SOCKET_ERROR) {
+			cout << "Error " << WSAGetLastError() << ": Cannot receive message";
+			break;
+		}
+		else {
+			buff[ret] = 0;
+			string m = buff;
+			post = post + m;
+			int k = post.find(ENDING);
+			if (k != -1) {
+				string data = post.substr(0, k);
+				return data;
+			}
+		}
+	}
+}
+
 
 /*
 * @function streamProcessing: send byte-stream data
@@ -94,44 +128,6 @@ void streamProcessing(SOCKET *client, string mess) {
 }
 
 
-/*
-* @function handleByte: process information received from the server
-* @param {SOCKET} client: information of client that receive
-* @return {string} message detail
-*/
-
-string handleByte(SOCKET *client) {
-	string post;
-	int ret;
-	char buff[BUFF_SIZE];
-	while (1) {
-		memset(&buff, 0, sizeof(buff));
-		// Recive echo message
-		ret = recv(*client, buff, BUFF_SIZE, 0);
-		if (ret == SOCKET_ERROR) {
-			cout << "Error " << WSAGetLastError() << ": Cannot receive message";
-			break;
-		}
-		else {
-			buff[ret] = 0;
-			string m = buff;
-			post = post + m;
-			int k = post.find(ENDING);
-			if (k != -1) {
-				string data = post.substr(0, k);
-				return data;
-			}
-		}
-	}
-}
-
-/*
-* @function split: split sting by delimiter
-* @param {string} str: the string need to split
-* @param {string} delimiter
-* @return {string}
-*/
-
 string split(string str, string delimiter) {
 	size_t pos = 0;
 	string token;
@@ -143,13 +139,6 @@ string split(string str, string delimiter) {
 	}
 	return str;
 }
-
-/*
-* @function split1: split sting by delimiter
-* @param {string} str: the string need to split
-* @param {string} delimiter
-* @return {vector<string>}
-*/
 
 vector<string> split1(string s, string delimiter) {
 	size_t pos_start = 0, pos_end, delim_len = delimiter.length();
@@ -166,31 +155,21 @@ vector<string> split1(string s, string delimiter) {
 	return res;
 }
 
-/*
-* @function exitRoom: user exit room
-* @param {SOCKET} client: information of client that receive
-* @return void
-*/
 
 void exitRoom(SOCKET *client) {
-	string mess = "25 ";
+	string mess = "EXIT ";
 	streamProcessing(client, mess);
 	string data = handleByte(client);
+	cout<< data;
 	data = data.substr(0, 2);
 	if (data == "25") {
 		cout << response.exit25 << endl;
 	}
-	else if (data == "12") {
+	else if (data == "14") {
 		cout << response.user12 << endl;
 	}
 }
 
-/*
-* @function windowLogin: user login into system
-* @param {SOCKET} client: information of client that receive
-* @param {string} username: username
-* @return {string}
-*/
 
 string windowLogin(SOCKET *client, string *username) {
 	cout << "Please choose a option" << endl;
@@ -212,35 +191,24 @@ string windowLogin(SOCKET *client, string *username) {
 	}
 }
 
-/*
-* @function waitQuestion: user wait for next question
-* @param {SOCKET} client: information of client that receive
-* @param {bool} k: flag
-* @return {void}
-*/
-
 void waitQuestion(SOCKET *client, bool *k) {
+	cout << "Please wait a few minute" << endl;
 	string data = handleByte(client);
-	cout << data;
 	string head = data.substr(0, 2);
 	string body = data.substr(3);
 	vector<string> question = split1(body, "<br/>");
+	user.round = question[1];
+	user.room = question[0];
 	if (head == "51") {
 		for (int i = 2;i < question.size(); i++) {
 			cout << question[i]<<endl;
 		}
 	}
-	else if (head == "12") {
+	else if (head == "14") {
 		cout << response.user12;
 		*k = false;
 	}
 }
-
-/*
-* @function answerTheQuestion: user answer question in single thread
-* @param {void*} param
-* @return {__stdcall}
-*/
 
 unsigned __stdcall answerTheQuestion(void* param) {
 	SOCKET *client = (SOCKET *)param;
@@ -248,63 +216,58 @@ unsigned __stdcall answerTheQuestion(void* param) {
 	cout << "2. Exit this game" << endl;
 	if (user.mainPlayer == 1)  cout << "3. Skip." << endl;
 	cout << "Please choose your option: ";
-	int n;
-	cin >>n ;
-	if (n == 1) {
-		cout << "Please choose the answer: " << endl;
-		answer = "";
-		getline(cin, answer);
-	}
-	else if (n == 2) {
-		exitRoom(client);
-		return 0;
-	}
-	else if (n == 3) {
-		cout << "You are skip. Please wait a few second." << endl;
-		string answer = "99";
-	}
+	string n;
+	do {
+		getline(cin, n);
+		if (n == "1") {
+			cout << "Please choose the answer: " << endl;
+			answer = "";
+			getline(cin, answer);
+		}
+		else if (n == "2") {
+			exitRoom(client);
+			return 0;
+		}
+		else if (n == "3") {
+			cout << "You are skip. Please wait a few second." << endl;
+			string answer = "99";
+		}
+		else {
+			cout << "Please choose again" << endl;
+		}
+	} while (n != "1"&&n != "2"&&n != "3");
 
-	string mess = "ANSW " + answer;
+	string mess = "ANSW "+user.room+ SPACE +user.round+ SPACE+answer;
 	streamProcessing(client, mess);
 	cout << "Please wait a few second. We are checking your answers" << endl;
 	return 0;
 }
 
-/*
-* @function waitTheAnswer: user wait the question in single thread
-* @param {void*} param
-* @return {__stdcall}
-*/
-
 unsigned __stdcall waitTheAnswer(void* param) {
 	SOCKET *client = (SOCKET *)param;
-	res = handleByte(client);
+	while (1) {
+		res = "";
+		res = handleByte(client);
+		string codeStatus = res.substr(0, 2);
+		if (codeStatus == "90"|| codeStatus == "99") {
+			continue;
+		}
+		return 0;
+	}
 	return 0;
 }
-
-/*
-* @function watch: user watch the question in single thread
-* @param {void*} param
-* @return {__stdcall}
-*/
 
 unsigned __stdcall watch(void* param) {
 	if (user.mainPlayer == 1) {
-		Sleep(10000);
-		cout << "Het thoi gian" << endl;
+		Sleep(20000);
+		cout << "Time up!" << endl;
 	}
 	else {
-		Sleep(8000);
-		cout << "Het thoi gian" << endl;
+		Sleep(15000);
+		cout << "Time up!" << endl;
 	}
 	return 0;
 }
-
-/*
-* @function answerQuestion: user answer question
-* @param {SOCKET} client: information of client that receive
-* @return {void}
-*/
 
 void answerQuestion(SOCKET *client) {
 	bool k = true;
@@ -319,55 +282,57 @@ void answerQuestion(SOCKET *client) {
 
 			//User tra loi trong thoi gian dem nguoc
 			WaitForSingleObject(time, INFINITE);
+			WaitForSingleObject(serverAnswer, INFINITE);
 			CloseHandle(time);
 			TerminateThread(userAnswer, 0);
-			WaitForSingleObject(serverAnswer, INFINITE);
 			CloseHandle(serverAnswer);
 			string head = res.substr(0, 1);
 			string body = res.substr(3);
 			vector<string> dataString = split1(body, "<br/>");
-			if (answer == dataString[2]) {
-				if (dataString[3] == user.username) {
-					user.mainPlayer = 1;
-					cout << "Correct answer fastest - You are main player" << endl;
+			string end = dataString[4];
+			string nextMainPlayer = dataString[3];
+			string answerServer = dataString[2];
+
+			if (end == "0") {
+				if (nextMainPlayer == "") {
+					continue;
+				}
+				else if (preMainPlayer == ""&&nextMainPlayer != "") {
+					continue;
 				}
 				else {
-					cout << "Correct answer" << endl;
+					if (answer == answerServer) {
+						if (user.username == nextMainPlayer) {
+							user.mainPlayer = 1;
+							cout << "You answer correctly the fastest, You will be the main player!" << endl;
+						}
+						else {
+							cout << "Correct answer!" << endl;
+						}
+					}
+					else {
+						cout << "Wrong answer, you are out!" << endl;
+						k = false;
+					}
 				}
-			}
-			else if (answer == "SKIP") {
-				continue;
 			}
 			else {
-				cout << "You are wrong" << endl;
-				k = false;
-			}
-
-			if (dataString[4] == "1") {
-				if (user.username == dataString[3]) {
-					cout << "Ban da chien thang" << endl;
+				if (nextMainPlayer == user.username) {
+					cout << "End game! You are win" << endl;
 					k = false;
 				}
 				else {
-					cout << "Tro choi ket thuc" << endl;
+					cout << "Wrong answer! End game! You are out" << endl;
 					k = false;
 				}
 			}
+			preMainPlayer = nextMainPlayer;
 		}
 	}
 }
 
-/*
-* @function selectRoom: user select room
-* @param {SOCKET} client: information of client that receive
-* @param {string} body: information of room
-* @param {bool} k
-* @return {void}
-*/
-
 void selectRoom(SOCKET *client, string body, bool *k) {
-	cout << body <<endl;
-	split(body, "<br/>");
+	cout << body << endl;
 	cout << "1. Choose your room." << endl;
 	cout << "2. Logout." << endl;
 	string n = "";
@@ -380,38 +345,31 @@ void selectRoom(SOCKET *client, string body, bool *k) {
 		streamProcessing(client, mess);
 		string data = handleByte(client);
 		Sleep(1000);
-		cout << "from join " << data << endl;
 		data = data.substr(0, 2);
-		if (data == "30") {
+		if (data == "21") {
 			cout << response.join90 << endl;
 			answerQuestion(client);
 		}
-		else if (data == "12") {
+		else if (data == "14") {
 			cout << response.user12 << endl;
 			*k = false;
 		}
 	}
 	else if (n == "2") {
-		mess = "95 " + mess;
+		mess = USER_LOGOUT;
 		streamProcessing(client, mess);
 		string data = handleByte(client);
 		data = data.substr(0, 2);
-		if (data == "95") {
+		if (data == "12") {
 			cout << response.quit95 << endl;
 			*k = false;
 		}
-		else if (data == "12") {
+		else if (data == "13") {
 			cout << response.user12 << endl;
 			*k = false;
 		}
 	}
 }
-
-/*
-* @function showRoom: user watch room
-* @param {SOCKET} client: information of client that receive
-* @return {void}
-*/
 
 void showRoom(SOCKET *client) {
 	bool k = true;
@@ -425,7 +383,7 @@ void showRoom(SOCKET *client) {
 		if (head == "20") {
 			selectRoom(client, body, &k);
 		}
-		else if (head == "12") {
+		else if (head == "14") {
 			cout << response.user12 << endl;
 			break;
 		}
@@ -444,9 +402,8 @@ void startRoomAdmin(SOCKET *client, string body){
 	cout << "Please choose room start: ";
 	string room;
 	getline(cin, room);
-	if (room == "nhom-15") {
+	if (room == body) {
 		string mess = "STRT " + body;
-		cout << mess;
 		streamProcessing(client, mess);
 		string data = handleByte(client);
 		string head = data.substr(0, 2);
@@ -458,12 +415,6 @@ void startRoomAdmin(SOCKET *client, string body){
 		cout << "Room does not exits"<<endl;
 	}
 }
-
-/*
-* @function startRoom: user join new room
-* @param {SOCKET} client: information of client that receive
-* @return {void}
-*/
 
 void startRoom(SOCKET *client) {
 	string mess = "GETQ ";
@@ -493,12 +444,6 @@ void startRoom(SOCKET *client) {
 //	}
 //}
 
-/*
-* @function adminLogout: admin start new room
-* @param {SOCKET} client: information of client that receive
-* @return {void}
-*/
-
 void adminLogout(SOCKET *client) {
 	string mess = "QUIT ";
 	streamProcessing(client, mess);
@@ -511,12 +456,6 @@ void adminLogout(SOCKET *client) {
 		cout << response.user12 << endl;
 	}
 }
-
-/*
-* @function windowAdmin: show admin page
-* @param {SOCKET} client: information of client that receive
-* @return {void}
-*/
 
 void windowAdmin(SOCKET *client) {
 	while (1) {
